@@ -25,66 +25,37 @@ export class AuthenticationRepository {
     });
   }
 
-  async signIn(
-    user: User,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const tokens = await this.generateTokenPair(user);
+  async signIn(user: User): Promise<string> {
+    const accessToken = await this.generateTokenPair(user);
     await this.prisma.user.update({
       data: {
-        refreshToken: tokens.refreshToken,
+        accessToken,
       },
       where: { id: user.id },
     });
-    return tokens;
+    return accessToken;
   }
 
   async signOut(id: number): Promise<void> {
     await this.prisma.user.update({
       data: {
-        refreshToken: null,
+        accessToken: null,
       },
       where: { id },
     });
   }
 
-  async refresh(
-    user: User,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const tokens = await this.generateTokenPair(user);
-    await this.prisma.user.update({
-      data: {
-        refreshToken: tokens.refreshToken,
+  async generateTokenPair(user: User): Promise<string> {
+    const accessToken = await this.jwtService.signAsync(
+      {
+        id: user.id,
+        username: user.username,
       },
-      where: { id: user.id },
-    });
-    return tokens;
-  }
-
-  async generateTokenPair(
-    user: User,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(
-        {
-          id: user.id,
-          username: user.username,
-        },
-        {
-          secret: jwtConfig.access,
-          expiresIn: jwtConfig.expiresIn.access,
-        },
-      ),
-      this.jwtService.signAsync(
-        {
-          id: user.id,
-          username: user.username,
-        },
-        {
-          secret: jwtConfig.refresh,
-          expiresIn: jwtConfig.expiresIn.refresh,
-        },
-      ),
-    ]);
-    return { accessToken, refreshToken };
+      {
+        secret: jwtConfig.access,
+        expiresIn: jwtConfig.expiresIn.access,
+      },
+    );
+    return accessToken;
   }
 }
