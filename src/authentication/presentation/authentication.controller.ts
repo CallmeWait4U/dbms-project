@@ -1,6 +1,6 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'libs/auth.guard';
 import { GetUser } from 'libs/getuser.decorator';
 import { SignOutCommand } from '../application/command/signout.command';
@@ -30,8 +30,9 @@ export class AuthenticationController {
   }
 
   @Post('sign-out')
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  async signOut(@GetUser() user: { id: number; username: string }) {
+  async signOut(@GetUser() user: { id: string; username: string }) {
     const command = new SignOutCommand({ id: user.id });
     await this.commandBus.execute(command);
   }

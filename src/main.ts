@@ -16,10 +16,13 @@ async function bootstrap() {
     }),
   );
 
-  const config = new DocumentBuilder().setTitle('DBMS API').build();
+  const config = new DocumentBuilder()
+    .setTitle('DBMS API')
+    .addBearerAuth()
+    .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  await app.listen(3000);
+  await app.listen(3001);
 }
 bootstrap();

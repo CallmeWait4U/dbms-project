@@ -17,6 +17,7 @@ export class AuthenticationRepository {
     const salt = await bcrypt.genSalt();
     const hashPassword = await bcrypt.hash(command.password, salt);
     const data = {
+      fullName: command.fullName,
       username: command.username,
       password: hashPassword,
     };
@@ -25,18 +26,19 @@ export class AuthenticationRepository {
     });
   }
 
-  async signIn(user: User): Promise<string> {
+  async signIn(user: User): Promise<User> {
     const accessToken = await this.generateTokenPair(user);
-    await this.prisma.user.update({
+    const userSignIn = await this.prisma.user.update({
       data: {
         accessToken,
       },
       where: { id: user.id },
     });
-    return accessToken;
+    console.log(userSignIn);
+    return userSignIn;
   }
 
-  async signOut(id: number): Promise<void> {
+  async signOut(id: string): Promise<void> {
     await this.prisma.user.update({
       data: {
         accessToken: null,
